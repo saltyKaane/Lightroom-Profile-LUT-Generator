@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Film Stock XMP Generator</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0f0f0f;
+            color: #e0e0e0;
+        }
+        h1 { color: #ff6b35; margin-bottom: 10px; }
+        .subtitle { color: #888; margin-bottom: 30px; }
+        .container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+        .sidebar {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            height: fit-content;
+        }
+        .main-content {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .preset-section { margin-bottom: 25px; }
+        .preset-section h3 {
+            color: #ff6b35;
+            margin-bottom: 12px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .preset-btn {
+            width: 100%;
+            background: #2a2a2a;
+            color: #e0e0e0;
+            border: 2px solid #3a3a3a;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .preset-btn:hover {
+            background: #3a3a3a;
+            border-color: #ff6b35;
+        }
+        .preset-btn.active {
+            background: #ff6b35;
+            border-color: #ff6b35;
+            color: white;
+        }
+        .preset-speed {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+        .film-description {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #bbb;
+        }
+        .film-description h2 {
+            color: #ff6b35;
+            margin-top: 0;
+            font-size: 20px;
+        }
+        .characteristics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .char-item {
+            background: #1a1a1a;
+            padding: 12px;
+            border-radius: 4px;
+        }
+        .char-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .char-value {
+            font-size: 14px;
+            color: #ff6b35;
+            font-weight: bold;
+        }
+        .btn {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 16px 36px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin: 10px 10px 0 0;
+        }
+        .btn:hover {
+            background: #ff5722;
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            background: #3a3a3a;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-secondary {
+            background: #2a2a2a;
+            border: 2px solid #3a3a3a;
+        }
+        .btn-secondary:hover {
+            background: #3a3a3a;
+            border-color: #ff6b35;
+        }
+        .info-box {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ff6b35;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #ff6b35;
+        }
+        .status {
+            background: #1e4620;
+            color: #6ee76e;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-size: 14px;
+            border-left: 4px solid #4caf50;
+        }
+        code {
+            background: #1a1a1a;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .multi-select-info {
+            background: #2a3a2a;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #aaa;
+        }
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .characteristics { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Film Stock XMP Profile Generator</h1>
+    <p class="subtitle">Generate authentic Lightroom XMP presets based on classic film stocks</p>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="multi-select-info">
+                💡 Hold Ctrl/Cmd to select multiple films for batch export
+            </div>
+
+            <div class="preset-section">
+                <h3>Color Negative</h3>
+                <button class="preset-btn" data-preset="portra400">
+                    <span>Kodak Portra 400</span>
+                    <span class="preset-speed">ISO 400</span>
+                </button>
+                <button class="preset-btn" data-preset="portra160">
+                    <span>Kodak Portra 160</span>
+                    <span class="preset-speed">ISO 160</span>
+                </button>
+                <button class="preset-btn" data-preset="portra800">
+                    <span>Kodak Portra 800</span>
+                    <span class="preset-speed">ISO 800</span>
+                </button>
+                <button class="preset-btn" data-preset="ektar100">
+                    <span>Kodak Ektar 100</span>
+                    <span class="preset-speed">ISO 100</span>
+                </button>
+                <button class="preset-btn" data-preset="gold200">
+                    <span>Kodak Gold 200</span>
+                    <span class="preset-speed">ISO 200</span>
+                </button>
+                <button class="preset-btn" data-preset="ultramax400">
+                    <span>Kodak UltraMax 400</span>
+                    <span class="preset-speed">ISO 400</span>
+                </button>
+                <button class="preset-btn" data-preset="superia400">
+                    <span>Fuji Superia 400</span>
+                    <span class="preset-speed">ISO 400</span>
+                </button>
+                <button class="preset-btn" data-preset="pro400h">
+                    <span>Fuji Pro 400H</span>
+                    <span class="preset-speed">ISO 400</span>
+                </button>
+            </div>
+
+            <div class="preset-section">
+                <h3>Slide Film</h3>
+                <button class="preset-btn" data-preset="velvia50">
+                    <span>Fuji Velvia 50</span>
+                    <span class="preset-speed">ISO 50</span>
+                </button>
+                <button class="preset-btn" data-preset="velvia100">
+                    <span>Fuji Velvia 100</span>
+                    <span class="preset-speed">ISO 100</span>
+                </button>
+                <button class="preset-btn" data-preset="provia100f">
+                    <span>Fuji Provia 100F</span>
+                    <span class="preset-speed">ISO 100</span>
+                </button>
+                <button class="preset-btn" data-preset="ektachrome100">
+                    <span>Kodak Ektachrome 100</span>
+                    <span class="preset-speed">ISO 100</span>
+                </button>
+            </div>
+
+            <div class="preset-section">
+                <h3>Black & White</h3>
+                <button class="preset-btn" data-preset="trix400">
+                    <span>Kodak Tri-X 400</span>
+                    <span class="preset-speed">ISO 400</span>
+                </button>
+                <button class="preset-btn" data-preset="hp5">
+                    <span>Ilford HP5 Plus</span>
+                    <span class="preset-speed">ISO 400</span>
+                </button>
+                <button class="preset-btn" data-preset="tmax400">
+                    <span>Kodak T-Max 400</span>
+                    <span class="preset-speed">ISO 400</span>
+                </button>
+                <button class="preset-btn" data-preset="pan400">
+                    <span>Ilford Pan 400</span>
+                    <span class="preset-speed">ISO 400</span>
+                </button>
+            </div>
+
+            <div class="preset-section">
+                <h3>Special Effects</h3>
+                <button class="preset-btn" data-preset="cinestill800t">
+                    <span>CineStill 800T</span>
+                    <span class="preset-speed">ISO 800</span>
+                </button>
+                <button class="preset-btn" data-preset="cinestill50d">
+                    <span>CineStill 50D</span>
+                    <span class="preset-speed">ISO 50</span>
+                </button>
+                <button class="preset-btn" data-preset="lomochrome">
+                    <span>Lomochrome Purple</span>
+                    <span class="preset-speed">ISO 400</span>
+                </button>
+            </div>
+
+            <button class="btn" id="downloadAllBtn" style="width: 100%; margin: 15px 0 0 0;">
+                Download All Selected
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="film-description" id="filmDescription">
+                <h2>Select a Film Stock</h2>
+                <p style="color: #888;">Choose one or multiple film stocks from the left to see details and generate XMP presets.</p>
+            </div>
+
+            <div id="selectedFilms" style="display: none; margin-bottom: 20px;">
+                <h3 style="color: #ff6b35; font-size: 14px; text-transform: uppercase;">Selected Films:</h3>
+                <div id="selectedList" style="font-size: 14px; color: #aaa;"></div>
+            </div>
+
+            <button class="btn" id="generateBtn" disabled>Generate XMP Preset</button>
+
+            <div id="status" style="display: none;"></div>
+
+            <div class="info-box">
+                <h3>📋 How to Install in Lightroom</h3>
+                <p><strong>Method 1: Import via Lightroom (Recommended)</strong></p>
+                <p style="margin-left: 20px;">
+                    1. File → Import Develop Profiles and Presets<br>
+                    2. Select your downloaded .xmp file(s)<br>
+                    3. Find them in Presets panel under "User Presets"
+                </p>
+                <p><strong>Method 2: Manual Installation</strong></p>
+                <p style="margin-left: 20px;">
+                    • <strong>Windows:</strong> <code>C:\Users\[Name]\AppData\Roaming\Adobe\CameraRaw\Settings\</code><br>
+                    • <strong>Mac:</strong> <code>~/Library/Application Support/Adobe/CameraRaw/Settings/</code>
+                </p>
+                <p style="margin-top: 15px;">After installation, restart Lightroom and find your presets in the Presets panel. Apply them with one click!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFilms = new Set();
+        let currentFilm = null;
+
+        const filmStocks = {
+            portra400: {
+                name: "Kodak Portra 400",
+                description: "Professional portrait film known for its exceptional skin tone reproduction. Features natural colors with a slight warm bias, fine grain structure, and excellent exposure latitude. The go-to choice for wedding and portrait photographers worldwide.",
+                characteristics: {
+                    grain: "Fine",
+                    contrast: "Moderate-Low",
+                    saturation: "Natural",
+                    color: "Warm, Pink Cast"
+                },
+                settings: {
+                    temp: 8, tint: 2, exposure: 0, contrast: -5, highlights: -10, shadows: 15,
+                    whites: 0, blacks: 8, clarity: -5, vibrance: -5, saturation: -3,
+                    hueRed: 0, hueOrange: 0, hueYellow: 0, hueGreen: 0, hueAqua: 0, hueBlue: 0, huePurple: 0, hueMagenta: 2,
+                    satRed: 0, satOrange: 0, satYellow: 0, satGreen: 0, satAqua: 0, satBlue: 0, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 5, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            portra160: {
+                name: "Kodak Portra 160",
+                description: "The finest grain in the Portra family with incredibly accurate color reproduction. Ideal for studio work, fashion, and commercial photography where detail is paramount. Slightly cooler than Portra 400 with enhanced skin tone accuracy.",
+                characteristics: {
+                    grain: "Ultra Fine",
+                    contrast: "Moderate",
+                    saturation: "Natural-Low",
+                    color: "Neutral-Warm"
+                },
+                settings: {
+                    temp: 5, tint: 0, exposure: 0, contrast: 0, highlights: -8, shadows: 12,
+                    whites: 0, blacks: 5, clarity: -3, vibrance: -8, saturation: -5,
+                    hueRed: 0, hueOrange: 0, hueYellow: 0, hueGreen: 0, hueAqua: 0, hueBlue: 0, huePurple: 0, hueMagenta: 0,
+                    satRed: 0, satOrange: 0, satYellow: 0, satGreen: 0, satAqua: 0, satBlue: 0, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 3, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            portra800: {
+                name: "Kodak Portra 800",
+                description: "High-speed portrait film that maintains Portra's signature look even in challenging light. Warmer tones with more visible grain structure. Perfect for available light photography, indoor events, and moody portrait work.",
+                characteristics: {
+                    grain: "Moderate",
+                    contrast: "Low",
+                    saturation: "Natural",
+                    color: "Warm"
+                },
+                settings: {
+                    temp: 12, tint: 3, exposure: 0, contrast: -8, highlights: -15, shadows: 20,
+                    whites: 0, blacks: 12, clarity: -8, vibrance: -3, saturation: 0,
+                    hueRed: 0, hueOrange: 0, hueYellow: 0, hueGreen: 0, hueAqua: 0, hueBlue: 0, huePurple: 0, hueMagenta: 3,
+                    satRed: 0, satOrange: 0, satYellow: 0, satGreen: 0, satAqua: 0, satBlue: 0, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 8, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            ektar100: {
+                name: "Kodak Ektar 100",
+                description: "World's finest grain color negative film with ultra-vivid saturation. Designed for landscape and commercial work where maximum sharpness and saturated colors are desired. High contrast with punchy blues and greens.",
+                characteristics: {
+                    grain: "Micro Fine",
+                    contrast: "High",
+                    saturation: "Very High",
+                    color: "Vivid, Punchy"
+                },
+                settings: {
+                    temp: 3, tint: -2, exposure: 0, contrast: 15, highlights: -5, shadows: -5,
+                    whites: 5, blacks: -5, clarity: 10, vibrance: 20, saturation: 15,
+                    hueRed: 2, hueOrange: 0, hueYellow: 0, hueGreen: -3, hueAqua: 0, hueBlue: 5, huePurple: 0, hueMagenta: 0,
+                    satRed: 10, satOrange: 5, satYellow: 8, satGreen: 15, satAqua: 10, satBlue: 20, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            gold200: {
+                name: "Kodak Gold 200",
+                description: "Classic consumer film with warm, golden tones perfect for sunny day photography. Moderate contrast with a nostalgic feel. Popular for street photography and everyday snapshots. Creates that vintage summer aesthetic.",
+                characteristics: {
+                    grain: "Moderate",
+                    contrast: "Moderate",
+                    saturation: "High",
+                    color: "Warm, Golden"
+                },
+                settings: {
+                    temp: 18, tint: 5, exposure: 0, contrast: 5, highlights: -8, shadows: 8,
+                    whites: 0, blacks: 5, clarity: 0, vibrance: 10, saturation: 8,
+                    hueRed: 0, hueOrange: -5, hueYellow: -5, hueGreen: 0, hueAqua: 0, hueBlue: 0, huePurple: 0, hueMagenta: 0,
+                    satRed: 5, satOrange: 8, satYellow: 10, satGreen: 0, satAqua: 0, satBlue: -5, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 5, lumYellow: 5, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            ultramax400: {
+                name: "Kodak UltraMax 400",
+                description: "Affordable all-purpose consumer film with punchy colors and good versatility. Warm color balance with enhanced yellows and oranges. Great general-purpose film for everyday photography with character.",
+                characteristics: {
+                    grain: "Moderate-Visible",
+                    contrast: "Moderate-High",
+                    saturation: "High",
+                    color: "Warm"
+                },
+                settings: {
+                    temp: 15, tint: 3, exposure: 0, contrast: 8, highlights: -10, shadows: 12,
+                    whites: 0, blacks: 8, clarity: 0, vibrance: 12, saturation: 10,
+                    hueRed: 0, hueOrange: -3, hueYellow: -3, hueGreen: 0, hueAqua: 0, hueBlue: 0, huePurple: 0, hueMagenta: 0,
+                    satRed: 5, satOrange: 10, satYellow: 12, satGreen: 0, satAqua: 0, satBlue: 0, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 3, lumYellow: 3, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            superia400: {
+                name: "Fuji Superia 400",
+                description: "Fujifilm's consumer film with cooler blue-green color palette. More neutral than Kodak consumer stocks with good sharpness. Excellent shadow detail and subtle color rendition. Great for everyday photography.",
+                characteristics: {
+                    grain: "Moderate",
+                    contrast: "Moderate",
+                    saturation: "Moderate",
+                    color: "Cool, Blue-Green"
+                },
+                settings: {
+                    temp: -5, tint: -5, exposure: 0, contrast: 5, highlights: -5, shadows: 8,
+                    whites: 0, blacks: 5, clarity: 0, vibrance: 5, saturation: 3,
+                    hueRed: 0, hueOrange: 0, hueYellow: 0, hueGreen: 5, hueAqua: 5, hueBlue: 5, huePurple: 0, hueMagenta: 0,
+                    satRed: 0, satOrange: 0, satYellow: 0, satGreen: 5, satAqua: 8, satBlue: 10, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            pro400h: {
+                name: "Fuji Pro 400H",
+                description: "Discontinued professional film beloved by wedding photographers. Characterized by soft, muted colors with a distinctive green-blue cast. Gentle contrast with beautiful skin tones. Creates dreamy, romantic images.",
+                characteristics: {
+                    grain: "Fine",
+                    contrast: "Low",
+                    saturation: "Muted",
+                    color: "Cool, Green-Blue"
+                },
+                settings: {
+                    temp: -10, tint: -8, exposure: 0, contrast: -10, highlights: -15, shadows: 20,
+                    whites: 0, blacks: 12, clarity: -10, vibrance: -10, saturation: -8,
+                    hueRed: 0, hueOrange: 0, hueYellow: 0, hueGreen: 8, hueAqua: 10, hueBlue: 5, huePurple: 0, hueMagenta: 0,
+                    satRed: -5, satOrange: -5, satYellow: -5, satGreen: 0, satAqua: 5, satBlue: 5, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            velvia50: {
+                name: "Fuji Velvia 50",
+                description: "Legendary slide film with extremely saturated, vibrant colors. Deep blues, rich greens, and punchy reds make it the gold standard for landscape photography. High contrast with intense color saturation.",
+                characteristics: {
+                    grain: "Ultra Fine",
+                    contrast: "Very High",
+                    saturation: "Extremely High",
+                    color: "Vivid, Deep"
+                },
+                settings: {
+                    temp: 2, tint: -3, exposure: 0, contrast: 25, highlights: -20, shadows: -15,
+                    whites: 10, blacks: -15, clarity: 15, vibrance: 35, saturation: 25,
+                    hueRed: 5, hueOrange: 0, hueYellow: 0, hueGreen: -5, hueAqua: 0, hueBlue: 8, huePurple: 5, hueMagenta: 5,
+                    satRed: 20, satOrange: 15, satYellow: 15, satGreen: 25, satAqua: 20, satBlue: 30, satPurple: 20, satMagenta: 15,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: -5, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            velvia100: {
+                name: "Fuji Velvia 100",
+                description: "Slightly less saturated than Velvia 50 but still incredibly punchy. Better highlight handling and exposure latitude. Excellent for landscapes with good dynamic range while maintaining vivid color.",
+                characteristics: {
+                    grain: "Ultra Fine",
+                    contrast: "High",
+                    saturation: "Very High",
+                    color: "Vivid"
+                },
+                settings: {
+                    temp: 3, tint: -2, exposure: 0, contrast: 20, highlights: -15, shadows: -10,
+                    whites: 8, blacks: -12, clarity: 12, vibrance: 30, saturation: 20,
+                    hueRed: 3, hueOrange: 0, hueYellow: 0, hueGreen: -3, hueAqua: 0, hueBlue: 5, huePurple: 3, hueMagenta: 3,
+                    satRed: 15, satOrange: 12, satYellow: 12, satGreen: 20, satAqua: 15, satBlue: 25, satPurple: 15, satMagenta: 12,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: -3, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            provia100f: {
+                name: "Fuji Provia 100F",
+                description: "Professional slide film with accurate, neutral color reproduction. Good contrast without Velvia's extreme saturation. Excellent all-purpose transparency film for commercial and documentary work.",
+                characteristics: {
+                    grain: "Ultra Fine",
+                    contrast: "Moderate-High",
+                    saturation: "Moderate-High",
+                    color: "Neutral, Accurate"
+                },
+                settings: {
+                    temp: 0, tint: 0, exposure: 0, contrast: 12, highlights: -10, shadows: -5,
+                    whites: 5, blacks: -8, clarity: 8, vibrance: 12, saturation: 8,
+                    hueRed: 0, hueOrange: 0, hueYellow: 0, hueGreen: 0, hueAqua: 0, hueBlue: 0, huePurple: 0, hueMagenta: 0,
+                    satRed: 8, satOrange: 8, satYellow: 8, satGreen: 10, satAqua: 8, satBlue: 10, satPurple: 5, satMagenta: 5,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            ektachrome100: {
+                name: "Kodak Ektachrome 100",
+                description: "Recently re-released slide film with neutral-warm color balance. Fine grain and excellent sharpness. Classic transparency look with good color accuracy and moderate contrast.",
+                characteristics: {
+                    grain: "Very Fine",
+                    contrast: "Moderate-High",
+                    saturation: "Moderate-High",
+                    color: "Neutral-Warm"
+                },
+                settings: {
+                    temp: 5, tint: 0, exposure: 0, contrast: 15, highlights: -12, shadows: -8,
+                    whites: 5, blacks: -10, clarity: 10, vibrance: 15, saturation: 10,
+                    hueRed: 0, hueOrange: 0, hueYellow: 0, hueGreen: 0, hueAqua: 0, hueBlue: 0, huePurple: 0, hueMagenta: 0,
+                    satRed: 10, satOrange: 10, satYellow: 10, satGreen: 12, satAqua: 10, satBlue: 12, satPurple: 8, satMagenta: 8,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            trix400: {
+                name: "Kodak Tri-X 400",
+                description: "Iconic black and white film with classic grain structure and high contrast. Deep blacks and bright highlights. The standard for photojournalism and street photography for decades.",
+                characteristics: {
+                    grain: "Visible, Classic",
+                    contrast: "High",
+                    saturation: "B&W",
+                    color: "Neutral B&W"
+                },
+                settings: {
+                    temp: 0, tint: 0, exposure: 0, contrast: 20, highlights: -15, shadows: -10,
+                    whites: 10, blacks: -15, clarity: 10, vibrance: -100, saturation: -100,
+                    hueRed: 0, hueOrange: 0, hueYellow: 0, hueGreen: 0, hueAqua: 0, hueBlue: 0, huePurple: 0, hueMagenta: 0,
+                    satRed: 0, satOrange: 0, satYellow: 0, satGreen: 0, satAqua: 0, satBlue: 0, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            hp5: {
+                name: "Ilford HP5 Plus",
+                description: "Classic British black and white film with smooth grain and rich tonality. Less contrasty than Tri-X with better shadow detail. Versatile film with excellent latitude.",
+                characteristics: {
+                    grain: "Moderate, Smooth",
+                    contrast: "Moderate-High",
+                    saturation: "B&W",
+                    color: "Neutral B&W"
+                },
+                settings: {
+                    temp: 0, tint: 0, exposure: 0, contrast: 15, highlights: -10, shadows: 5,
+                    whites: 5, blacks: -10, clarity: 5, vibrance: -100, saturation: -100,
+                    hueRed: 0, hueOrange: 0, hueYellow: 0, hueGreen: 0, hueAqua: 0, hueBlue: 0, huePurple: 0, hueMagenta: 0,
+                    satRed: 0, satOrange: 0, satYellow: 0, satGreen: 0, satAqua: 0, satBlue: 0, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            tmax400: {
+                name: "Kodak T-Max 400",
+                description: "Modern tabular grain black and white film. Very fine grain for 400 speed with high sharpness. Excellent tonal range with smooth gradation.",
+                characteristics: {
+                    grain: "Fine, Modern",
+                    contrast: "Moderate-High",
+                    saturation: "B&W",
+                    color: "Neutral B&W"
+                },
+                settings: {
+                    temp: 0, tint: 0, exposure: 0, contrast: 18, highlights: -12, shadows: -5,
+                    whites: 8, blacks: -12, clarity: 8, vibrance: -100, saturation: -100,
+                    hueRed: 0, hueOrange: 0, hueYellow: 0, hueGreen: 0, hueAqua: 0, hueBlue: 0, huePurple: 0, hueMagenta: 0,
+                    satRed: 0, satOrange: 0, satYellow: 0, satGreen: 0, satAqua: 0, satBlue: 0, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            pan400: {
+                name: "Ilford Pan 400",
+                description: "Versatile black and white film with medium contrast and fine grain. Excellent for general purpose photography with good tonal range.",
+                characteristics: {
+                    grain: "Fine-Moderate",
+                    contrast: "Moderate",
+                    saturation: "B&W",
+                    color: "Neutral B&W"
+                },
+                settings: {
+                    temp: 0, tint: 0, exposure: 0, contrast: 12, highlights: -8, shadows: 0,
+                    whites: 5, blacks: -8, clarity: 3, vibrance: -100, saturation: -100,
+                    hueRed: 0, hueOrange: 0, hueYellow: 0, hueGreen: 0, hueAqua: 0, hueBlue: 0, huePurple: 0, hueMagenta: 0,
+                    satRed: 0, satOrange: 0, satYellow: 0, satGreen: 0, satAqua: 0, satBlue: 0, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            cinestill800t: {
+                name: "CineStill 800T",
+                description: "Motion picture film adapted for still photography. Tungsten balanced with warm tones and prominent red halation around highlights. Cinematic look perfect for night photography.",
+                characteristics: {
+                    grain: "Visible",
+                    contrast: "Moderate",
+                    saturation: "Moderate-High",
+                    color: "Warm, Tungsten"
+                },
+                settings: {
+                    temp: 20, tint: 5, exposure: 0, contrast: 5, highlights: -15, shadows: 15,
+                    whites: 0, blacks: 10, clarity: -5, vibrance: 10, saturation: 8,
+                    hueRed: -5, hueOrange: -5, hueYellow: 0, hueGreen: 0, hueAqua: 5, hueBlue: 10, huePurple: 0, hueMagenta: 0,
+                    satRed: 15, satOrange: 10, satYellow: 5, satGreen: 0, satAqua: 5, satBlue: 10, satPurple: 5, satMagenta: 5,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: -5, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            cinestill50d: {
+                name: "CineStill 50D",
+                description: "Daylight-balanced cinema film with fine grain and natural colors. Subtle halation effects with excellent sharpness. Great for portraits and general photography with cinematic character.",
+                characteristics: {
+                    grain: "Fine",
+                    contrast: "Moderate",
+                    saturation: "Natural",
+                    color: "Neutral-Warm"
+                },
+                settings: {
+                    temp: 5, tint: 0, exposure: 0, contrast: 8, highlights: -10, shadows: 10,
+                    whites: 0, blacks: 5, clarity: 5, vibrance: 5, saturation: 3,
+                    hueRed: 0, hueOrange: 0, hueYellow: 0, hueGreen: 0, hueAqua: 0, hueBlue: 0, huePurple: 0, hueMagenta: 0,
+                    satRed: 5, satOrange: 5, satYellow: 3, satGreen: 0, satAqua: 0, satBlue: 5, satPurple: 0, satMagenta: 0,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: 0, lumAqua: 0, lumBlue: 0, lumPurple: 0, lumMagenta: 0
+                }
+            },
+            lomochrome: {
+                name: "Lomochrome Purple",
+                description: "Experimental film that shifts greens to purple and yellows to pink. Unique, unpredictable color palette with creative artistic effects. Popular for experimental and creative photography.",
+                characteristics: {
+                    grain: "Moderate",
+                    contrast: "Moderate-High",
+                    saturation: "High",
+                    color: "Purple-Pink Shift"
+                },
+                settings: {
+                    temp: 0, tint: 15, exposure: 0, contrast: 10, highlights: -8, shadows: 8,
+                    whites: 0, blacks: 5, clarity: 0, vibrance: 20, saturation: 15,
+                    hueRed: 10, hueOrange: 15, hueYellow: 20, hueGreen: 40, hueAqua: 30, hueBlue: 15, huePurple: 0, hueMagenta: -10,
+                    satRed: 10, satOrange: 10, satYellow: 15, satGreen: -20, satAqua: 10, satBlue: 15, satPurple: 25, satMagenta: 20,
+                    lumRed: 0, lumOrange: 0, lumYellow: 0, lumGreen: -10, lumAqua: 0, lumBlue: 0, lumPurple: 5, lumMagenta: 5
+                }
+            }
+        };
+
+        const presetBtns = document.querySelectorAll('.preset-btn');
+        presetBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const preset = btn.dataset.preset;
+                
+                if (e.ctrlKey || e.metaKey) {
+                    // Multi-select mode
+                    if (selectedFilms.has(preset)) {
+                        selectedFilms.delete(preset);
+                        btn.classList.remove('active');
+                    } else {
+                        selectedFilms.add(preset);
+                        btn.classList.add('active');
+                    }
+                    updateSelectedDisplay();
+                } else {
+                    // Single select mode
+                    selectedFilms.clear();
+                    presetBtns.forEach(b => b.classList.remove('active'));
+                    selectedFilms.add(preset);
+                    btn.classList.add('active');
+                    currentFilm = preset;
+                    displayFilmInfo(preset);
+                }
+
+                document.getElementById('generateBtn').disabled = selectedFilms.size === 0;
+                document.getElementById('downloadAllBtn').disabled = selectedFilms.size === 0;
+            });
+        });
+
+        function updateSelectedDisplay() {
+            const container = document.getElementById('selectedFilms');
+            const list = document.getElementById('selectedList');
+            
+            if (selectedFilms.size > 1) {
+                container.style.display = 'block';
+                list.innerHTML = Array.from(selectedFilms).map(id => filmStocks[id].name).join(', ');
+            } else if (selectedFilms.size === 1) {
+                container.style.display = 'none';
+                currentFilm = Array.from(selectedFilms)[0];
+                displayFilmInfo(currentFilm);
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function displayFilmInfo(presetId) {
+            const film = filmStocks[presetId];
+            const desc = document.getElementById('filmDescription');
+            
+            desc.innerHTML = `
+                <h2>${film.name}</h2>
+                <p>${film.description}</p>
+                <div class="characteristics">
+                    <div class="char-item">
+                        <div class="char-label">Grain</div>
+                        <div class="char-value">${film.characteristics.grain}</div>
+                    </div>
+                    <div class="char-item">
+                        <div class="char-label">Contrast</div>
+                        <div class="char-value">${film.characteristics.contrast}</div>
+                    </div>
+                    <div class="char-item">
+                        <div class="char-label">Saturation</div>
+                        <div class="char-value">${film.characteristics.saturation}</div>
+                    </div>
+                    <div class="char-item">
+                        <div class="char-label">Color</div>
+                        <div class="char-value">${film.characteristics.color}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('generateBtn').addEventListener('click', () => {
+            if (selectedFilms.size === 1) {
+                const filmId = Array.from(selectedFilms)[0];
+                generateAndDownload(filmId);
+            } else {
+                downloadAll();
+            }
+        });
+
+        document.getElementById('downloadAllBtn').addEventListener('click', downloadAll);
+
+        function downloadAll() {
+            const count = selectedFilms.size;
+            let downloaded = 0;
+            
+            selectedFilms.forEach(filmId => {
+                setTimeout(() => {
+                    generateAndDownload(filmId);
+                    downloaded++;
+                    if (downloaded === count) {
+                        showStatus(`Successfully generated ${count} XMP preset${count > 1 ? 's' : ''}!`);
+                    }
+                }, downloaded * 200);
+            });
+        }
+
+        function generateAndDownload(filmId) {
+            const film = filmStocks[filmId];
+            const xmp = generateXMP(film);
+            downloadXMP(xmp, `${film.name.replace(/\s+/g, '_')}.xmp`);
+        }
+
+        function generateXMP(film) {
+            const s = film.settings;
+            return `<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="Adobe XMP Core 7.0-c000 1.000000, 0000/00/00-00:00:00">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description rdf:about=""
+      xmlns:crs="http://ns.adobe.com/camera-raw-settings/1.0/">
+      <crs:Version>15.1</crs:Version>
+      <crs:ProcessVersion>11.0</crs:ProcessVersion>
+      <crs:WhiteBalance>Custom</crs:WhiteBalance>
+      <crs:Temperature>${s.temp}</crs:Temperature>
+      <crs:Tint>${s.tint}</crs:Tint>
+      <crs:Exposure2012>${s.exposure.toFixed(2)}</crs:Exposure2012>
+      <crs:Contrast2012>${s.contrast}</crs:Contrast2012>
+      <crs:Highlights2012>${s.highlights}</crs:Highlights2012>
+      <crs:Shadows2012>${s.shadows}</crs:Shadows2012>
+      <crs:Whites2012>${s.whites}</crs:Whites2012>
+      <crs:Blacks2012>${s.blacks}</crs:Blacks2012>
+      <crs:Texture>0</crs:Texture>
+      <crs:Clarity2012>${s.clarity}</crs:Clarity2012>
+      <crs:Dehaze>0</crs:Dehaze>
+      <crs:Vibrance>${s.vibrance}</crs:Vibrance>
+      <crs:Saturation>${s.saturation}</crs:Saturation>
+      <crs:ParametricShadows>0</crs:ParametricShadows>
+      <crs:ParametricDarks>0</crs:ParametricDarks>
+      <crs:ParametricLights>0</crs:ParametricLights>
+      <crs:ParametricHighlights>0</crs:ParametricHighlights>
+      <crs:ParametricShadowSplit>25</crs:ParametricShadowSplit>
+      <crs:ParametricMidtoneSplit>50</crs:ParametricMidtoneSplit>
+      <crs:ParametricHighlightSplit>75</crs:ParametricHighlightSplit>
+      <crs:Sharpness>40</crs:Sharpness>
+      <crs:SharpenRadius>+1.0</crs:SharpenRadius>
+      <crs:SharpenDetail>25</crs:SharpenDetail>
+      <crs:SharpenEdgeMasking>0</crs:SharpenEdgeMasking>
+      <crs:LuminanceSmoothing>0</crs:LuminanceSmoothing>
+      <crs:ColorNoiseReduction>25</crs:ColorNoiseReduction>
+      <crs:HueAdjustmentRed>${s.hueRed}</crs:HueAdjustmentRed>
+      <crs:HueAdjustmentOrange>${s.hueOrange}</crs:HueAdjustmentOrange>
+      <crs:HueAdjustmentYellow>${s.hueYellow}</crs:HueAdjustmentYellow>
+      <crs:HueAdjustmentGreen>${s.hueGreen}</crs:HueAdjustmentGreen>
+      <crs:HueAdjustmentAqua>${s.hueAqua}</crs:HueAdjustmentAqua>
+      <crs:HueAdjustmentBlue>${s.hueBlue}</crs:HueAdjustmentBlue>
+      <crs:HueAdjustmentPurple>${s.huePurple}</crs:HueAdjustmentPurple>
+      <crs:HueAdjustmentMagenta>${s.hueMagenta}</crs:HueAdjustmentMagenta>
+      <crs:SaturationAdjustmentRed>${s.satRed}</crs:SaturationAdjustmentRed>
+      <crs:SaturationAdjustmentOrange>${s.satOrange}</crs:SaturationAdjustmentOrange>
+      <crs:SaturationAdjustmentYellow>${s.satYellow}</crs:SaturationAdjustmentYellow>
+      <crs:SaturationAdjustmentGreen>${s.satGreen}</crs:SaturationAdjustmentGreen>
+      <crs:SaturationAdjustmentAqua>${s.satAqua}</crs:SaturationAdjustmentAqua>
+      <crs:SaturationAdjustmentBlue>${s.satBlue}</crs:SaturationAdjustmentBlue>
+      <crs:SaturationAdjustmentPurple>${s.satPurple}</crs:SaturationAdjustmentPurple>
+      <crs:SaturationAdjustmentMagenta>${s.satMagenta}</crs:SaturationAdjustmentMagenta>
+      <crs:LuminanceAdjustmentRed>${s.lumRed}</crs:LuminanceAdjustmentRed>
+      <crs:LuminanceAdjustmentOrange>${s.lumOrange}</crs:LuminanceAdjustmentOrange>
+      <crs:LuminanceAdjustmentYellow>${s.lumYellow}</crs:LuminanceAdjustmentYellow>
+      <crs:LuminanceAdjustmentGreen>${s.lumGreen}</crs:LuminanceAdjustmentGreen>
+      <crs:LuminanceAdjustmentAqua>${s.lumAqua}</crs:LuminanceAdjustmentAqua>
+      <crs:LuminanceAdjustmentBlue>${s.lumBlue}</crs:LuminanceAdjustmentBlue>
+      <crs:LuminanceAdjustmentPurple>${s.lumPurple}</crs:LuminanceAdjustmentPurple>
+      <crs:LuminanceAdjustmentMagenta>${s.lumMagenta}</crs:LuminanceAdjustmentMagenta>
+      <crs:SplitToningShadowHue>0</crs:SplitToningShadowHue>
+      <crs:SplitToningShadowSaturation>0</crs:SplitToningShadowSaturation>
+      <crs:SplitToningHighlightHue>0</crs:SplitToningHighlightHue>
+      <crs:SplitToningHighlightSaturation>0</crs:SplitToningHighlightSaturation>
+      <crs:SplitToningBalance>0</crs:SplitToningBalance>
+      <crs:ColorGradeMidtoneHue>0</crs:ColorGradeMidtoneHue>
+      <crs:ColorGradeMidtoneSat>0</crs:ColorGradeMidtoneSat>
+      <crs:ColorGradeShadowLum>0</crs:ColorGradeShadowLum>
+      <crs:ColorGradeMidtoneLum>0</crs:ColorGradeMidtoneLum>
+      <crs:ColorGradeHighlightLum>0</crs:ColorGradeHighlightLum>
+      <crs:ColorGradeBlending>50</crs:ColorGradeBlending>
+      <crs:ColorGradeGlobalHue>0</crs:ColorGradeGlobalHue>
+      <crs:ColorGradeGlobalSat>0</crs:ColorGradeGlobalSat>
+      <crs:ColorGradeGlobalLum>0</crs:ColorGradeGlobalLum>
+      <crs:AutoLateralCA>0</crs:AutoLateralCA>
+      <crs:LensProfileEnable>0</crs:LensProfileEnable>
+      <crs:LensManualDistortionAmount>0</crs:LensManualDistortionAmount>
+      <crs:VignetteAmount>0</crs:VignetteAmount>
+      <crs:DefringePurpleAmount>0</crs:DefringePurpleAmount>
+      <crs:DefringePurpleHueLo>30</crs:DefringePurpleHueLo>
+      <crs:DefringePurpleHueHi>70</crs:DefringePurpleHueHi>
+      <crs:DefringeGreenAmount>0</crs:DefringeGreenAmount>
+      <crs:DefringeGreenHueLo>40</crs:DefringeGreenHueLo>
+      <crs:DefringeGreenHueHi>60</crs:DefringeGreenHueHi>
+      <crs:PerspectiveUpright>0</crs:PerspectiveUpright>
+      <crs:PerspectiveVertical>0</crs:PerspectiveVertical>
+      <crs:PerspectiveHorizontal>0</crs:PerspectiveHorizontal>
+      <crs:PerspectiveRotate>0.0</crs:PerspectiveRotate>
+      <crs:PerspectiveAspect>0</crs:PerspectiveAspect>
+      <crs:PerspectiveScale>100</crs:PerspectiveScale>
+      <crs:PerspectiveX>0.00</crs:PerspectiveX>
+      <crs:PerspectiveY>0.00</crs:PerspectiveY>
+      <crs:GrainAmount>0</crs:GrainAmount>
+      <crs:PostCropVignetteAmount>0</crs:PostCropVignetteAmount>
+      <crs:ShadowTint>0</crs:ShadowTint>
+      <crs:RedHue>0</crs:RedHue>
+      <crs:RedSaturation>0</crs:RedSaturation>
+      <crs:GreenHue>0</crs:GreenHue>
+      <crs:GreenSaturation>0</crs:GreenSaturation>
+      <crs:BlueHue>0</crs:BlueHue>
+      <crs:BlueSaturation>0</crs:BlueSaturation>
+      <crs:ConvertToGrayscale>False</crs:ConvertToGrayscale>
+      <crs:OverrideLookVignette>False</crs:OverrideLookVignette>
+      <crs:ToneCurveName2012>Linear</crs:ToneCurveName2012>
+      <crs:CameraProfile>Adobe Standard</crs:CameraProfile>
+      <crs:CameraProfileDigest>54650A341B5B5CCAE8442D0B43A92BCE</crs:CameraProfileDigest>
+      <crs:HasSettings>True</crs:HasSettings>
+      <crs:CropTop>0</crs:CropTop>
+      <crs:CropLeft>0</crs:CropLeft>
+      <crs:CropBottom>1</crs:CropBottom>
+      <crs:CropRight>1</crs:CropRight>
+      <crs:CropAngle>0</crs:CropAngle>
+      <crs:CropConstrainToWarp>0</crs:CropConstrainToWarp>
+      <crs:HasCrop>False</crs:HasCrop>
+      <crs:AlreadyApplied>True</crs:AlreadyApplied>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>`;
+        }
+
+        function downloadXMP(content, filename) {
+            const blob = new Blob([content], { type: 'application/rdf+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showStatus(message) {
+            const status = document.getElementById('status');
+            status.innerHTML = message;
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
